@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+    <footer>
+  <p>© 2026 KevinSoftware</p>
+</footer>
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playwrite+NZ+Basic+Guides&family=Reenie+Beanie&family=Slabo+27px&family=Style+Script&display=swap" rel="stylesheet">
+    <title>Teacher Kevin's Word Game</title>
+     <link rel="icon" type="image/x-icon" href="Logo2.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <style>
+        body {
+           font-family: Arial, Helvetica, sans-serif;
+            text-align: center;
+            background: #2e7bf0;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+     font-family: "Playwrite NZ Basic Guides", cursive;
+    font-size: 35px;
+    text-shadow: #858585 4px 4px;
+    opacity:.8
+        }
+footer {
+  text-align: center;
+  margin-top: 2px;         
+  padding: 10px 0;          
+  font-size: 14px;         
+  color: #555;              
+}
+.BigPencil {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;          
+    max-width: 25vw;      
+    opacity: 0.8;
+    pointer-events: none; 
+}
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .word-bank, .answer-area {
+            min-height: 70px;
+            border: 2px dashed #ccc;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 10px;
+            transition: 0.3s ease;
+        }
+
+        .word {
+            display: inline-block;
+            background: #4da6ff;
+            color: white;
+            padding: 8px 14px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.2s ease;
+            user-select: none;
+        }
+
+        @keyframes horizontal-shaking {
+ 0% { transform: translateX(0) }
+ 25% { transform: translateX(5px) }
+ 50% { transform: translateX(-5px) }
+ 75% { transform: translateX(5px) }
+ 100% { transform: translateX(0) }
+}
+
+        .word:hover {
+            transform: scale(1.1);
+            background: #1e90ff;
+            animation: horizontal-shaking 5s infinite;
+            
+            
+        }
+
+        .buttons {
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 10px 25px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            background: #28a745;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s ease;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #218838;
+        }
+
+        #nextBtn {
+            background: #007bff;
+        }
+
+        #nextBtn:hover {
+            background: #0069d9;
+        }
+        .hint-box:hover {
+            box-shadow: #0e5499;
+            cursor: pointer;
+            opacity: 1;
+         }
+      
+         .hint-box {
+  background-color: #f0f8ff;  /* Light blue background */
+  border-left: 5px solid #007BFF;  /* Blue border for emphasis */
+  padding: 5px 15px;
+  margin: 15px 0;
+  font-size: 16px;
+  color: #000;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  opacity:.5;
+   animation: horizontal-shaking 5s infinite;
+  
+}
+
+        #result {
+            font-size: 20px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        #progress {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+        .header {
+  text-align: center;
+  margin-top: -20px;
+}
+
+.logo {
+  width: 300px; 
+  height: auto;
+  display: block;
+  margin: -60px auto -60px auto; 
+}
+    </style>
+</head>
+<body>
+<img src="Pencil.png" class="BigPencil">
+<audio id="hover-audio" src="Select.mp3"></audio> 
+<div class="container">
+<div class="header">
+
+  <img src="Logo.png" alt="Logo" class="logo">
+  <h1>Unscramble</h1>
+</div>
+
+    <div id="progress"></div>
+
+    <div class="word-bank" id="wordBank"></div>
+    <div class="answer-area" id="answerArea"></div>
+
+    <div class="buttons">
+        <button onclick="checkAnswer()">Check Answer</button>
+        <button id="nextBtn" onclick="nextSentence()" style="display:none;">Next</button>
+    </div>
+ <div class="hint-box">
+  💡 Hint: SUBJ + AUX + VERB + VOCAB. //
+            QUEST+ AUX + SUBJ + VERB +VOCAB ?
+</div>
+    <div id="result"></div>
+</div>
+
+<script>
+
+    const sentences = [
+//Future – going to//
+"Are you going to eat dinner tonight?",
+"I am going to drink some water later.",
+"She is going to read that book tomorrow.",
+"We are going to write a letter this weekend.",
+"They are going to watch a movie tonight.",
+"He is going to call his friend later.",
+"I am going to take the bus to school.",
+"She is going to give a gift to her brother.",
+"We are going to buy some groceries.",
+"They are going to sell their old car.",
+"I am going to open the window.",
+"He is going to close the door quietly.",
+"Are you going to listen to music tonight?",
+
+//Simple Past//
+"I ate breakfast early this morning.",
+"She drank coffee yesterday.",
+"He read a novel last night.",
+"We wrote emails yesterday afternoon.",
+"They watched a documentary last weekend.",
+"I called my mom yesterday.",
+"She took a photo of the sunset.",
+"He gave me a pen yesterday.",
+"We bought a new phone last week.",
+"They sold their old house last year.",
+"I opened the package this morning.",
+"She closed the shop at 8 pm.",
+"We listened to the radio yesterday.",
+
+//Present Progressive//
+"I am eating lunch right now.",
+"She is drinking tea at the moment.",
+"He is reading a magazine in the living room.",
+"We are writing a story together.",
+"They are watching TV at the moment.",
+"I am calling my friend right now.",
+"She is taking notes during the lecture.",
+"He is giving a presentation in class.",
+"We are buying ingredients for dinner.",
+"They are selling products online today.",
+"I am opening the door for the guests.",
+"She is closing her laptop now.",
+"We are listening to a new song.",
+
+    ];
+
+    console.assert(Array.isArray(sentences), "Sentences should be an array");
+    console.assert(sentences.length > 0, "Sentences array should not be empty");
+    console.assert(typeof sentences[0] === "string", "Sentences should contain strings");
+shuffle(sentences);
+ let currentIndex = 0;
+
+    const wordBank = document.getElementById("wordBank");
+    const answerArea = document.getElementById("answerArea");
+    const result = document.getElementById("result");
+    const nextBtn = document.getElementById("nextBtn");
+    const progress = document.getElementById("progress");
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function loadSentence() {
+        wordBank.innerHTML = "";
+        answerArea.innerHTML = "";
+        result.textContent = "";
+        nextBtn.style.display = "none";
+
+        const currentSentence = sentences[currentIndex];
+        const words = currentSentence.split(" ");
+        const shuffled = shuffle([...words]);
+
+        progress.textContent = `Sentence ${currentIndex + 1} of ${sentences.length}`;
+
+        shuffled.forEach(word => {
+            const span = document.createElement("span");
+            span.classList.add("word");
+            span.textContent = word;
+            span.onclick = function () {
+                moveWord(span);
+            };
+            wordBank.appendChild(span);
+        });
+    }
+
+    function moveWord(wordElement) {
+        if (wordElement.parentElement === wordBank) {
+            answerArea.appendChild(wordElement);
+        } else {
+            wordBank.appendChild(wordElement);
+        }
+    }
+
+    function checkAnswer() {
+        const currentSentence = sentences[currentIndex];
+
+        const userAnswer = Array.from(answerArea.children)
+            .map(word => word.textContent)
+            .join(" ");
+
+        if (userAnswer === currentSentence) {
+            result.textContent = "✅ Correct!";
+            result.style.color = "green";
+            nextBtn.style.display = "inline-block";
+        } else {
+            result.textContent = "❌ Wrong! Try again.";
+            result.style.color = "red";
+
+            while (answerArea.firstChild) {
+                wordBank.appendChild(answerArea.firstChild);
+            }
+        }
+    }
+
+    function nextSentence() {
+        currentIndex++;
+
+        if (currentIndex >= sentences.length) {
+            result.textContent = "🎉 You completed all sentences!";
+            result.style.color = "purple";
+            wordBank.innerHTML = "";
+            answerArea.innerHTML = "";
+            nextBtn.style.display = "none";
+            progress.textContent = "Game Complete";
+            return;
+        }
+
+        loadSentence();
+    }
+      
+  
+
+
+
+ 
+    loadSentence();
+    const hoverAudio = document.getElementById("hover-audio");
+
+
+function playHoverSound() {
+    hoverAudio.currentTime = 0;
+    hoverAudio.play();
+}
+
+document.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("mouseenter", playHoverSound);
+});
+</script>
+
+</body>
+</html>
