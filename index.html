@@ -9,6 +9,78 @@
 <link rel="icon" type="image/x-icon" href="Logo2.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
+    <!-- ============================================= -->
+<!-- Flashcard link — paste this where you want the button to appear -->
+<!-- ============================================= -->
+<a href="https://www.teacherkevin.com/randomword" target="_blank" rel="noopener" class="flashcard-cta">
+  <span class="flashcard-cta__pin"></span>
+  <span class="flashcard-cta__label">TRY NEW VOCABULARY FLASHCARD !</span>
+</a>
+
+<style>
+  .flashcard-cta{
+    --cork-1:#8a5a34;
+    --cork-2:#764a29;
+    --pin:#d6402f;
+    --pin-dark:#a52a1e;
+    --accent:#2f8f7d;
+    --accent-dark:#1f6a5c;
+
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    text-decoration:none;
+    font-family:'Kalam', cursive;
+    font-weight:700;
+    font-size:18px;
+    letter-spacing:0.02em;
+    color:#fff8ec;
+    background:linear-gradient(160deg, var(--cork-1), var(--cork-2));
+    padding:16px 28px 16px 30px;
+    border-radius:14px;
+    border:1px solid rgba(255,248,236,0.25);
+    box-shadow:
+      0 10px 0 var(--accent-dark),
+      0 16px 22px -8px rgba(30,15,5,0.55);
+    transform:rotate(-1.5deg);
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .flashcard-cta:hover{
+    transform:rotate(-1.5deg) translateY(-3px);
+    box-shadow:
+      0 13px 0 var(--accent-dark),
+      0 20px 26px -8px rgba(30,15,5,0.6);
+  }
+  .flashcard-cta:active{
+    transform:rotate(-1.5deg) translateY(3px);
+    box-shadow:
+      0 4px 0 var(--accent-dark),
+      0 8px 14px -6px rgba(30,15,5,0.5);
+  }
+  .flashcard-cta__pin{
+    position:absolute;
+    top:-11px;
+    left:50%;
+    transform:translateX(-50%);
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #ff6b57, var(--pin) 55%, var(--pin-dark) 100%);
+    box-shadow:0 3px 5px rgba(0,0,0,0.4), inset 0 -2px 3px rgba(0,0,0,0.25);
+  }
+  .flashcard-cta__label{
+    text-shadow:0 2px 0 rgba(0,0,0,0.25);
+  }
+
+  @media (max-width:380px){
+    .flashcard-cta{
+      font-size:15px;
+      padding:14px 20px 14px 22px;
+    }
+  }
+</style>
     <style>
         body {
            font-family: Arial, Helvetica, sans-serif;
