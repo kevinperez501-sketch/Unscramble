@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Corkboard Flashcards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cork-1:#8a5a34;
+    --cork-2:#764a29;
+    --card:#fffdf6;
+    --card-edge:#f1e8cf;
+    --ink:#3a2a1c;
+    --pin:#d6402f;
+    --pin-dark:#a52a1e;
+    --accent:#2f8f7d;
+    --accent-dark:#1f6a5c;
+    --paper-line:#e4d9b8;
+    --shadow: 0 18px 30px -12px rgba(30,15,5,0.55);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:'Nunito',sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 20% 15%, rgba(255,255,255,0.05), transparent 40%),
+      radial-gradient(circle at 80% 85%, rgba(255,255,255,0.04), transparent 45%),
+      repeating-radial-gradient(circle at 10% 20%, rgba(0,0,0,0.06) 0, rgba(0,0,0,0.06) 1px, transparent 2px, transparent 14px),
+      repeating-radial-gradient(circle at 70% 60%, rgba(0,0,0,0.05) 0, rgba(0,0,0,0.05) 1px, transparent 2px, transparent 11px),
+      linear-gradient(160deg, var(--cork-1), var(--cork-2));
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:32px 16px 60px;
+  }
+
+  header{
+    text-align:center;
+    margin-bottom:22px;
+  }
+  .eyebrow{
+    display:inline-block;
+    background:var(--pin);
+    color:#fff8ec;
+    font-weight:800;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    padding:5px 14px;
+    border-radius:999px;
+    box-shadow:0 3px 0 var(--pin-dark);
+    transform:rotate(-2deg);
+    margin-bottom:14px;
+  }
+  h1{
+    font-family:'Kalam',cursive;
+    font-size:clamp(30px,6vw,50px);
+    margin:0;
+    color:#fff8ec;
+    text-shadow:0 3px 0 rgba(0,0,0,0.25);
+    transform:rotate(-1deg);
+  }
+  .sub{
+    color:#f2e4ca;
+    font-weight:600;
+    margin-top:8px;
+    opacity:0.9;
+    font-size:15px;
+  }
+
+  .stage{
+    width:100%;
+    max-width:420px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .category-pill{
+    background:rgba(255,248,236,0.14);
+    color:#fff8ec;
+    font-size:12.5px;
+    font-weight:700;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    padding:5px 14px;
+    border-radius:999px;
+    margin-bottom:14px;
+  }
+
+  .card-wrap{
+    perspective:1600px;
+    width:300px;
+    height:380px;
+    margin-bottom:8px;
+  }
+  .pin{
+    position:absolute;
+    left:50%;
+    top:-14px;
+    transform:translateX(-50%);
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #ff6b57, var(--pin) 55%, var(--pin-dark) 100%);
+    box-shadow:0 4px 6px rgba(0,0,0,0.4), inset 0 -2px 3px rgba(0,0,0,0.25);
+    z-index:5;
+  }
+  .card-outer{
+    position:relative;
+    width:100%;
+    height:100%;
+  }
+  .card{
+    position:relative;
+    width:100%;
+    height:100%;
+    cursor:pointer;
+    transform-style:preserve-3d;
+    transition:transform 0.6s cubic-bezier(.2,.8,.3,1.1);
+    transform:rotate(var(--tilt,0deg));
+  }
+  .card.flipped{
+    transform:rotate(var(--tilt,0deg)) rotateY(180deg);
+  }
+  .face{
+    position:absolute;
+    inset:0;
+    backface-visibility:hidden;
+    border-radius:14px;
+    background:var(--card);
+    border:1px solid var(--card-edge);
+    box-shadow:var(--shadow);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px);
+    background-size: 100% 34px;
+    background-position: 0 60px;
+  }
+  .face.front{
+    background-color:var(--card);
+  }
+  .face.back{
+    transform:rotateY(180deg);
+    background-color:#fbf3e3;
+  }
+  .emoji{
+    font-size:118px;
+    line-height:1;
+    filter:drop-shadow(0 8px 10px rgba(0,0,0,0.18));
+    user-select:none;
+  }
+  .hint{
+    margin-top:22px;
+    font-size:12.5px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:#b7a077;
+  }
+  .word{
+    font-family:'Kalam',cursive;
+    font-size:42px;
+    font-weight:700;
+    color:var(--accent-dark);
+    text-align:center;
+    line-height:1.15;
+  }
+  .category{
+    margin-top:10px;
+    font-size:13px;
+    font-weight:700;
+    color:#9c8968;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+  }
+  .speak-btn{
+    margin-top:20px;
+    padding:9px 16px;
+    background:var(--accent);
+    color:#fff8ec;
+    font-size:13px;
+    font-weight:800;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    box-shadow:0 4px 0 var(--accent-dark);
+    font-family:'Nunito',sans-serif;
+  }
+  .speak-btn:active{
+    transform:translateY(2px);
+    box-shadow:0 2px 0 var(--accent-dark);
+  }
+
+  .controls{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin-top:22px;
+  }
+  button{
+    font-family:'Nunito',sans-serif;
+    font-weight:800;
+    border:none;
+    cursor:pointer;
+    border-radius:12px;
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  button:active{transform:translateY(2px);}
+  .nav-btn{
+    width:52px;height:52px;
+    border-radius:50%;
+    background:#fff8ec;
+    color:var(--ink);
+    font-size:20px;
+    box-shadow:0 5px 0 #cbb98d;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .nav-btn:active{box-shadow:0 2px 0 #cbb98d;}
+  .shuffle-btn{
+    padding:13px 22px;
+    background:var(--accent);
+    color:#fff8ec;
+    font-size:14.5px;
+    box-shadow:0 5px 0 var(--accent-dark);
+    letter-spacing:0.03em;
+  }
+  .shuffle-btn:active{box-shadow:0 2px 0 var(--accent-dark);}
+
+  .jump-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:18px;
+    background:rgba(255,248,236,0.12);
+    padding:8px 12px;
+    border-radius:12px;
+  }
+  .jump-row label{
+    color:#f2e4ca;
+    font-size:12.5px;
+    font-weight:700;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+  }
+  .jump-row input{
+    width:70px;
+    padding:6px 8px;
+    border-radius:8px;
+    border:1px solid #cbb98d;
+    font-family:'Nunito',sans-serif;
+    font-weight:700;
+    text-align:center;
+  }
+  .jump-row button{
+    padding:7px 14px;
+    background:#fff8ec;
+    color:var(--ink);
+    font-size:13px;
+    box-shadow:0 3px 0 #cbb98d;
+  }
+
+  footer{
+    margin-top:20px;
+    color:#e6d6b3;
+    font-size:12.5px;
+    opacity:0.85;
+    text-align:center;
+  }
+
+  @media (max-width:380px){
+    .card-wrap{width:260px;height:340px;}
+    .emoji{font-size:96px;}
+    .word{font-size:34px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .card{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="eyebrow">Flashcard Corner</span>
+  <h1>Everyday Object Flashcards</h1>
+  <div class="sub">Tap a card to flip it and reveal its name</div>
+</header>
+
+<div class="stage">
+  <div class="category-pill" id="categoryPill">Food</div>
+
+  <div style="position:relative;">
+    <div class="pin"></div>
+    <div class="card-wrap">
+      <div class="card-outer">
+        <div class="card" id="card">
+          <div class="face front">
+            <div class="emoji" id="frontEmoji">🍎</div>
+            <div class="hint">Tap to reveal</div>
+          </div>
+          <div class="face back">
+            <div class="word" id="backWord">Apple</div>
+            <div class="category" id="backCategory">Food</div>
+            <button class="speak-btn" id="speakBtn" aria-label="Say the word again">🔊 Say it again</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="nav-btn" id="prevBtn" aria-label="Previous card">←</button>
+    <button class="shuffle-btn" id="shuffleBtn">🔀 Shuffle</button>
+    <button class="nav-btn" id="nextBtn" aria-label="Next card">→</button>
+  </div>
+
+  <div class="jump-row">
+    <label for="jumpInput">Jump to</label>
+    <input type="number" id="jumpInput" min="1" value="1">
+    <button id="jumpBtn">Go</button>
+  </div>
+</div>
+
+<footer>Card <span id="posLabel">1</span> of <span id="totalLabel">1</span></footer>
+
+<script>
+  // Every card = one real-world object matched to one existing emoji.
+  // No duplicated emoji, no duplicated words, no color-multiplying.
+  const cards = [
+    // Food
+    ["Apple","🍎","Food"],["Banana","🍌","Food"],["Orange","🍊","Food"],["Grapes","🍇","Food"],
+    ["Strawberry","🍓","Food"],["Watermelon","🍉","Food"],["Pineapple","🍍","Food"],["Peach","🍑","Food"],
+    ["Cherries","🍒","Food"],["Lemon","🍋","Food"],["Pear","🍐","Food"],["Mango","🥭","Food"],
+    ["Coconut","🥥","Food"],["Kiwi","🥝","Food"],["Carrot","🥕","Food"],["Corn","🌽","Food"],
+    ["Potato","🥔","Food"],["Tomato","🍅","Food"],["Broccoli","🥦","Food"],["Bell Pepper","🫑","Food"],
+    ["Cucumber","🥒","Food"],["Mushroom","🍄","Food"],["Chestnut","🌰","Food"],["Peanuts","🥜","Food"],
+    ["Beans","🫘","Food"],["Garlic","🧄","Food"],["Onion","🧅","Food"],["Olive","🫒","Food"],
+    ["Avocado","🥑","Food"],["Leafy Greens","🥬","Food"],["Ginger Root","🫚","Food"],["Butter","🧈","Food"],
+    ["Bread","🍞","Food"],["Cheese","🧀","Food"],["Egg","🥚","Food"],["Bacon","🥓","Food"],
+    ["Meat on Bone","🍖","Food"],["Poultry Leg","🍗","Food"],["Cut of Meat","🥩","Food"],["Fried Shrimp","🍤","Food"],
+    ["Salt Shaker","🧂","Food"],["Canned Food","🥫","Food"],["Pretzel","🥨","Food"],["Bagel","🥯","Food"],
+    ["Pancakes","🥞","Food"],["Waffle","🧇","Food"],["Pizza","🍕","Food"],["Hamburger","🍔","Food"],
+    ["Hot Dog","🌭","Food"],["Taco","🌮","Food"],["Burrito","🌯","Food"],["Sandwich","🥪","Food"],
+    ["Popcorn","🍿","Food"],["Bento Box","🍱","Food"],["Rice Cracker","🍘","Food"],["Rice Ball","🍙","Food"],
+    ["Cooked Rice","🍚","Food"],["Curry Rice","🍛","Food"],["Ramen Bowl","🍜","Food"],["Spaghetti","🍝","Food"],
+    ["Roasted Sweet Potato","🍠","Food"],["Oden Skewer","🍢","Food"],["Sushi","🍣","Food"],["Fish Cake","🍥","Food"],
+    ["Moon Cake","🥮","Food"],["Dango","🍡","Food"],["Dumpling","🥟","Food"],["Fortune Cookie","🥠","Food"],
+    ["Takeout Box","🥡","Food"],["Crab","🦀","Food"],["Lobster","🦞","Food"],["Shrimp","🦐","Food"],
+    ["Squid","🦑","Food"],["Oyster","🦪","Food"],["Croissant","🥐","Food"],["Baguette","🥖","Food"],
+    ["Flatbread","🫓","Food"],["Cake","🍰","Food"],["Cookie","🍪","Food"],["Donut","🍩","Food"],
+    ["Ice Cream","🍦","Food"],["Pie","🥧","Food"],["Cupcake","🧁","Food"],["Custard","🍮","Food"],
+    ["Chocolate Bar","🍫","Food"],["Candy","🍬","Food"],["Lollipop","🍭","Food"],["Honey Jar","🍯","Food"],
+    ["Beverage Box","🧃","Food"],["Cocktail Glass","🍸","Food"],["Tropical Drink","🍹","Food"],["Wine Glass","🍷","Food"],
+    ["Beer Mug","🍺","Food"],["Clinking Mugs","🍻","Food"],["Bubble Tea","🧋","Food"],["Mate Drink","🧉","Food"],
+    ["Ice Cube","🧊","Food"],["Chopsticks","🥢","Food"],
+    // Kitchen
+    ["Cup","☕","Kitchen"],["Teapot","🫖","Kitchen"],["Bowl","🥣","Kitchen"],["Jar","🫙","Kitchen"],
+    ["Bottle","🧴","Kitchen"],["Fork","🍴","Kitchen"],["Spoon","🥄","Kitchen"],["Knife","🔪","Kitchen"],
+    ["Pot","🍲","Kitchen"],["Frying Pan","🍳","Kitchen"],["Plate","🍽️","Kitchen"],
+    // School & Office
+    ["Book","📖","School"],["Notebook","📓","School"],["Pencil","✏️","School"],["Pen","🖊️","School"],
+    ["Crayon","🖍️","School"],["Ruler","📏","School"],["Backpack","🎒","School"],["Scissors","✂️","School"],
+    ["Paperclip","📎","School"],["Pushpin","📌","School"],["Bookmark","🔖","School"],["Envelope","✉️","School"],
+    ["Memo Pad","📝","School"],["Map","🗺️","School"],["Abacus","🧮","School"],["Card File Box","🗃️","School"],
+    ["File Cabinet","🗄️","School"],["Spiral Notepad","🗒️","School"],["Spiral Calendar","🗓️","School"],["Card Index","📇","School"],
+    ["Chart Increasing","📈","School"],["Chart Decreasing","📉","School"],["Bar Chart","📊","School"],["Clipboard","📋","School"],
+    ["Round Pushpin","📍","School"],["Linked Paperclips","🖇️","School"],["Stack of Books","📚","School"],["Closed Book","📕","School"],
+    ["Green Book","📗","School"],["Blue Book","📘","School"],["Orange Book","📙","School"],["Decorated Notebook","📔","School"],
+    ["Ledger","📒","School"],["Newspaper","📰","School"],["Rolled Newspaper","🗞️","School"],["Curled Page","📃","School"],
+    ["Page Facing Up","📄","School"],["Scroll","📜","School"],["Receipt","🧾","School"],["Wastebasket","🗑️","School"],
+    // Household
+    ["Key","🔑","Household"],["Lock","🔒","Household"],["Window","🪟","Household"],["Door","🚪","Household"],
+    ["Bed","🛏️","Household"],["Couch","🛋️","Household"],["Chair","🪑","Household"],["Mirror","🪞","Household"],
+    ["Candle","🕯️","Household"],["Light Bulb","💡","Household"],["Flashlight","🔦","Household"],["Broom","🧹","Household"],
+    ["Bucket","🪣","Household"],["Basket","🧺","Household"],["Soap Bar","🧼","Household"],["Sponge","🧽","Household"],
+    ["Toilet Paper","🧻","Household"],["Toolbox","🧰","Household"],["Hammer","🔨","Household"],["Screwdriver","🪛","Household"],
+    ["Wrench","🔧","Household"],["Saw","🪚","Household"],["Ladder","🪜","Household"],["Brick","🧱","Household"],
+    ["Magnet","🧲","Household"],["Bell","🔔","Household"],["Clock","⏰","Household"],["Watch","⌚","Household"],
+    ["Telephone","☎️","Household"],["Radio","📻","Household"],["Television","📺","Household"],["Camera","📷","Household"],
+    ["Laptop","💻","Household"],["Computer","🖥️","Household"],["Keyboard","⌨️","Household"],["Computer Mouse","🖱️","Household"],
+    ["Phone","📱","Household"],["Battery","🔋","Household"],["Electric Plug","🔌","Household"],["Framed Picture","🖼️","Household"],
+    ["Shopping Cart","🛒","Household"],["Shopping Bags","🛍️","Household"],["Lipstick","💄","Household"],["Safety Pin","🧷","Household"],
+    ["Plunger","🪠","Household"],
+    // Clothing
+    ["Shirt","👕","Clothing"],["Pants","👖","Clothing"],["Coat","🧥","Clothing"],["Socks","🧦","Clothing"],
+    ["Dress","👗","Clothing"],["Necktie","👔","Clothing"],["Scarf","🧣","Clothing"],["Gloves","🧤","Clothing"],
+    ["Cap","🧢","Clothing"],["Hat","👒","Clothing"],["Top Hat","🎩","Clothing"],["Shoe","👞","Clothing"],
+    ["Sneaker","👟","Clothing"],["Heel","👠","Clothing"],["Boot","🥾","Clothing"],["Shorts","🩳","Clothing"],
+    ["Glasses","👓","Clothing"],["Sunglasses","🕶️","Clothing"],["Purse","👜","Clothing"],["Wallet","👛","Clothing"],
+    ["Briefcase","💼","Clothing"],["Suitcase","🧳","Clothing"],["Ring","💍","Clothing"],["Crown","👑","Clothing"],
+    // Toys
+    ["Soccer Ball","⚽","Toys"],["Basketball","🏀","Toys"],["Teddy Bear","🧸","Toys"],["Kite","🪁","Toys"],
+    ["Balloon","🎈","Toys"],["Dice","🎲","Toys"],["Puzzle Piece","🧩","Toys"],["Yo-Yo","🪀","Toys"],
+    ["Dart Board","🎯","Toys"],["Boomerang","🪃","Toys"],["Game Controller","🎮","Toys"],["Nesting Doll","🪆","Toys"],
+    // Sports
+    ["Tennis Ball","🎾","Sports"],["Football","🏈","Sports"],["Rugby Ball","🏉","Sports"],["Volleyball","🏐","Sports"],
+    ["Field Hockey Stick","🏑","Sports"],["Ice Hockey Stick","🏒","Sports"],["Cricket Bat","🏏","Sports"],["Ping Pong Paddle","🏓","Sports"],
+    ["Badminton Racquet","🏸","Sports"],["Boxing Glove","🥊","Sports"],["Martial Arts Uniform","🥋","Sports"],["Goal Net","🥅","Sports"],
+    ["Flying Disc","🥏","Sports"],["Softball","🥎","Sports"],["Golf Flag","⛳","Sports"],["Ice Skate","⛸️","Sports"],
+    ["Skateboard","🛹","Sports"],["Roller Skate","🛼","Sports"],["Sled","🛷","Sports"],["Curling Stone","🥌","Sports"],
+    ["Skis","🎿","Sports"],["Diving Mask","🤿","Sports"],["Running Shirt","🎽","Sports"],["Kayak","🛶","Sports"],
+    ["Parachute","🪂","Sports"],
+    // Music
+    ["Guitar","🎸","Music"],["Piano","🎹","Music"],["Drum","🥁","Music"],["Trumpet","🎺","Music"],
+    ["Violin","🎻","Music"],["Saxophone","🎷","Music"],["Microphone","🎤","Music"],["Headphones","🎧","Music"],
+    ["Banjo","🪕","Music"],["Accordion","🪗","Music"],["Long Drum","🪘","Music"],["Flute","🪈","Music"],
+    // Bathroom
+    ["Toothbrush","🪥","Bathroom"],["Toilet","🚽","Bathroom"],["Bathtub","🛁","Bathroom"],["Razor","🪒","Bathroom"],["Shower","🚿","Bathroom"],
+    // Transportation
+    ["Car","🚗","Transportation"],["Bicycle","🚲","Transportation"],["Bus","🚌","Transportation"],["Train","🚂","Transportation"],
+    ["Airplane","✈️","Transportation"],["Helicopter","🚁","Transportation"],["Boat","🚤","Transportation"],["Sailboat","⛵","Transportation"],
+    ["Scooter","🛴","Transportation"],["Motorcycle","🏍️","Transportation"],["Truck","🚚","Transportation"],["Taxi","🚕","Transportation"],
+    ["Auto Rickshaw","🛺","Transportation"],["Articulated Lorry","🚛","Transportation"],["Tractor","🚜","Transportation"],["Race Car","🏎️","Transportation"],
+    ["Police Car","🚓","Transportation"],["Ambulance","🚑","Transportation"],["Fire Engine","🚒","Transportation"],["Minibus","🚐","Transportation"],
+    ["Trolleybus","🚎","Transportation"],["Tram","🚊","Transportation"],["Monorail","🚝","Transportation"],["Mountain Railway","🚞","Transportation"],
+    ["Suspension Railway","🚟","Transportation"],["Light Rail","🚈","Transportation"],["Metro","🚇","Transportation"],["Train Station","🚉","Transportation"],
+    ["Rocket","🚀","Transportation"],["Flying Saucer","🛸","Transportation"],["Ferry","⛴️","Transportation"],["Motor Boat","🛥️","Transportation"],
+    ["Fuel Pump","⛽","Transportation"],["Wheel","🛞","Transportation"],
+    // Outdoors & Nature
+    ["Umbrella","☂️","Outdoors"],["Tent","⛺","Outdoors"],["Compass","🧭","Outdoors"],["Telescope","🔭","Outdoors"],
+    ["Fishing Pole","🎣","Outdoors"],["Campfire","🔥","Outdoors"],["Fallen Leaf","🍂","Outdoors"],
+    ["Maple Leaf","🍁","Outdoors"],["Herb Sprig","🌿","Outdoors"],["Four Leaf Clover","🍀","Outdoors"],["Seedling","🌱","Outdoors"],
+    ["Sheaf of Rice","🌾","Outdoors"],["Cactus","🌵","Outdoors"],["Palm Tree","🌴","Outdoors"],["Evergreen Tree","🌲","Outdoors"],
+    ["Deciduous Tree","🌳","Outdoors"],["Rock","🪨","Outdoors"],["Wood Log","🪵","Outdoors"],["Feather","🪶","Outdoors"],
+    ["Seashell","🐚","Outdoors"],["Rose","🌹","Outdoors"],["Hibiscus","🌺","Outdoors"],["Sunflower","🌻","Outdoors"],
+    ["Tulip","🌷","Outdoors"],["Cherry Blossom","🌸","Outdoors"],["Bouquet","💐","Outdoors"],
+    // Places
+    ["House","🏠","Places"],["House with Garden","🏡","Places"],["Office Building","🏢","Places"],["Department Store","🏬","Places"],
+    ["Factory","🏭","Places"],["Hospital","🏥","Places"],["Bank","🏦","Places"],["Hotel","🏨","Places"],
+    ["School Building","🏫","Places"],["Convenience Store","🏪","Places"],["Post Office","🏣","Places"],["Castle","🏰","Places"],
+    ["Japanese Castle","🏯","Places"],["Stadium","🏟️","Places"],["Ferris Wheel","🎡","Places"],["Roller Coaster","🎢","Places"],
+    ["Carousel Horse","🎠","Places"],["Fountain","⛲","Places"],["Bridge","🌉","Places"],["Statue of Liberty","🗽","Places"],
+    ["Tokyo Tower","🗼","Places"],["Church","⛪","Places"],["Mosque","🕌","Places"],["Synagogue","🕍","Places"],
+    ["Hindu Temple","🛕","Places"],["Shinto Shrine","⛩️","Places"],
+    // Money & Medical
+    ["Money Bag","💰","Money"],["Banknote","💵","Money"],["Coin","🪙","Money"],["Credit Card","💳","Money"],
+    ["Package","📦","Money"],["Postbox","📮","Money"],["Ballot Box","🗳️","Money"],["Pill","💊","Medical"],
+    ["Bandage","🩹","Medical"],["Thermometer","🌡️","Medical"],["Syringe","💉","Medical"],["Stethoscope","🩺","Medical"],
+    // Misc
+    ["Gift Box","🎁","Misc"],["Hourglass","⏳","Misc"],["Chain Link","🔗","Misc"],["Chains","⛓️","Misc"],
+    ["Balance Scale","⚖️","Misc"],["Mouse Trap","🪤","Misc"],["Fire Extinguisher","🧯","Misc"],["Old Key","🗝️","Misc"],
+    ["Paint Palette","🎨","Misc"],["Thread Spool","🧵","Misc"],["Yarn Ball","🧶","Misc"],["Sewing Needle","🪡","Misc"],
+    ["Anchor","⚓","Misc"],["Shield","🛡️","Misc"],["Sword","🗡️","Misc"],["Gem Stone","💎","Misc"],
+    ["Trophy","🏆","Misc"],["Medal","🥇","Misc"],["Flag","🚩","Misc"],["Placard","🪧","Misc"]
+  ].map(([word, emoji, category]) => ({ word, emoji, category }));
+
+  let order = cards.map((_, i) => i);
+  let index = 0;
+  let flipped = false;
+
+  const card = document.getElementById('card');
+  const frontEmoji = document.getElementById('frontEmoji');
+  const backWord = document.getElementById('backWord');
+  const backCategory = document.getElementById('backCategory');
+  const categoryPill = document.getElementById('categoryPill');
+  const posLabel = document.getElementById('posLabel');
+  const totalLabel = document.getElementById('totalLabel');
+  const jumpInput = document.getElementById('jumpInput');
+
+  totalLabel.textContent = cards.length;
+  jumpInput.max = cards.length;
+
+  function tiltFor(i){
+    const seed = (i * 37) % 7;
+    return (seed - 3) * 0.6;
+  }
+
+  function showCard(resetFlip = true){
+    const c = cards[order[index]];
+    frontEmoji.textContent = c.emoji;
+    backWord.textContent = c.word;
+    backCategory.textContent = c.category;
+    categoryPill.textContent = c.category;
+    card.style.setProperty('--tilt', tiltFor(order[index]) + 'deg');
+    if (resetFlip){
+      flipped = false;
+      card.classList.remove('flipped');
+    }
+    posLabel.textContent = index + 1;
+    jumpInput.value = index + 1;
+  }
+
+  function go(delta){
+    index = (index + delta + order.length) % order.length;
+    showCard(true);
+  }
+
+  function speakCurrentWord(){
+    if (!('speechSynthesis' in window)) return;
+    const c = cards[order[index]];
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(c.word);
+    utter.rate = 0.9;
+    window.speechSynthesis.speak(utter);
+  }
+
+  card.addEventListener('click', () => {
+    flipped = !flipped;
+    card.classList.toggle('flipped', flipped);
+    if (flipped) speakCurrentWord();
+  });
+
+  document.getElementById('speakBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    speakCurrentWord();
+  });
+
+  document.getElementById('nextBtn').addEventListener('click', (e) => { e.stopPropagation(); go(1); });
+  document.getElementById('prevBtn').addEventListener('click', (e) => { e.stopPropagation(); go(-1); });
+
+  document.getElementById('shuffleBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    for (let i = order.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    index = 0;
+    showCard(true);
+  });
+
+  document.getElementById('jumpBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    let n = parseInt(jumpInput.value, 10);
+    if (isNaN(n)) return;
+    n = Math.min(Math.max(n, 1), cards.length);
+    index = n - 1;
+    showCard(true);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') go(1);
+    if (e.key === 'ArrowLeft') go(-1);
+    if (e.key === ' ' || e.key === 'Enter'){
+      if (document.activeElement === jumpInput) return;
+      e.preventDefault();
+      flipped = !flipped;
+      card.classList.toggle('flipped', flipped);
+    }
+  });
+
+  showCard(true);
+</script>
+
+</body>
+</html>
