@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Past participle flashcards</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
+<style>
+:root{--bg:#eef2f0;--ink:#12302b;--mute:#5d746e;--front:#fffdf8;--back:#12302b;--backink:#f2efe6;--accent:#e0a526;--line:#c9d5d1;--ok:#2f7d5b;--no:#b5472f;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1a18;--ink:#e6efec;--mute:#8fa8a1;--front:#17302b;--back:#e8c46a;--backink:#14261f;--accent:#e8c46a;--line:#25403a;--ok:#5fc197;--no:#e5836b}}
+:root[data-theme="dark"]{--bg:#0d1a18;--ink:#e6efec;--mute:#8fa8a1;--front:#17302b;--back:#e8c46a;--backink:#14261f;--accent:#e8c46a;--line:#25403a;--ok:#5fc197;--no:#e5836b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh;display:flex;justify-content:center}
+main{width:100%;max-width:560px;padding:20px 18px 32px;display:flex;flex-direction:column;gap:16px}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+h1{font-size:1.15rem;margin:0;font-weight:800;letter-spacing:-.01em}
+.count{color:var(--mute);font-size:.95rem}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .25s}
+.scene{perspective:1200px}
+.card{position:relative;width:100%;aspect-ratio:4/3;border:0;padding:0;background:none;cursor:pointer;font:inherit;color:inherit;transform-style:preserve-3d;transition:transform .45s}
+.card.flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;backface-visibility:hidden;-webkit-backface-visibility:hidden;padding:20px;text-align:center}
+.f{background:var(--front);border:2px solid var(--ink)}
+.b{background:var(--back);color:var(--backink);transform:rotateY(180deg)}
+.lab{font-size:.95rem;color:var(--mute)}
+.b .lab{color:var(--backink);opacity:.75}
+.word{font-size:clamp(2.2rem,11vw,3.8rem);font-weight:800;letter-spacing:-.02em;line-height:1.05;overflow-wrap:anywhere}
+.card:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.row{display:flex;gap:10px}
+button.c{flex:1;font:inherit;font-weight:600;padding:12px;border-radius:12px;border:2px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+button.c:active{transform:translateY(1px)}
+button.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+button.no{background:var(--no);border-color:var(--no);color:#fff}
+.tools{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+button.t{font:inherit;font-size:.9rem;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--mute);cursor:pointer}
+button.t[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.hint{text-align:center;color:var(--mute);font-size:.85rem;margin:0}
+.done{text-align:center;padding:40px 10px;font-size:1.1rem}
+.card{aspect-ratio:1/.85}
+.face{justify-content:space-between;gap:6px;padding:14px 16px}
+.f{color:var(--ink)}
+.word{flex:1;display:flex;align-items:center;justify-content:center}
+.sen{display:block;font-size:1.05rem;line-height:1.3;font-weight:600}
+.sen b{padding:0 .15em;border-bottom:3px solid var(--accent);font-weight:800}
+@media (prefers-reduced-motion:reduce){.card,.bar i{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <header><h1>Irregular verbs</h1><span class="count" id="count"></span></header>
+  <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+  <div id="stage">
+    <div class="scene">
+      <button class="card" id="card" aria-label="Flip card">
+        <span class="face f" id="ff"></span>
+        <span class="face b" id="fb"></span>
+      </button>
+    </div>
+  </div>
+  <div class="row" id="rate">
+    <button class="c no" id="miss">Review again</button>
+    <button class="c" id="hear">Listen</button>
+    <button class="c ok" id="got">Got it</button>
+  </div>
+  <div class="row">
+    <button class="c" id="prev">Previous</button>
+    <button class="c" id="next">Next</button>
+  </div>
+  <div class="tools">
+    <button class="t" id="shuf" aria-pressed="false">Shuffle</button>
+    <button class="t" id="only" aria-pressed="false">Only cards to review</button>
+    <button class="t" id="rev" aria-pressed="false">Show participle first</button>
+    <button class="t" id="reset">Reset progress</button>
+  </div>
+  <p class="hint">Click the card or press Space to flip. Arrow keys move between cards.</p>
+</main>
+<script>
+const RAW=`be|been
+bear|born/borne
+beat|beaten
+become|become
+begin|begun
+bend|bent
+bet|bet
+bid|bid
+bind|bound
+bite|bitten
+bleed|bled
+blow|blown
+break|broken
+breed|bred
+bring|brought
+broadcast|broadcast
+build|built
+burst|burst
+buy|bought
+cast|cast
+catch|caught
+choose|chosen
+cling|clung
+come|come
+cost|cost
+creep|crept
+cut|cut
+deal|dealt
+dig|dug
+dive|dived
+do|done
+draw|drawn
+drink|drunk
+drive|driven
+eat|eaten
+fall|fallen
+feed|fed
+feel|felt
+fight|fought
+find|found
+fit|fit
+flee|fled
+fly|flown
+forbid|forbidden
+forget|forgotten
+forgive|forgiven
+freeze|frozen
+get|gotten
+give|given
+go|gone
+grind|ground
+grow|grown
+hang|hung
+have|had
+hear|heard
+hide|hidden
+hit|hit
+hold|held
+hurt|hurt
+keep|kept
+know|known
+lay|laid
+lead|led
+leave|left
+lend|lent
+let|let
+lie|lain
+light|lit/lighted
+lose|lost
+make|made
+mean|meant
+meet|met
+mistake|mistaken
+overcome|overcome
+overdo|overdone
+overtake|overtaken
+overthrow|overthrown
+pay|paid
+plead|pled/pleaded
+prove|proven/proved
+put|put
+quit|quit
+read|read
+ride|ridden
+ring|rung
+rise|risen
+run|run
+say|said
+see|seen
+seek|sought
+sell|sold
+send|sent
+set|set
+sew|sewn/sewed
+shake|shaken
+shed|shed
+shine|shone/shined
+shoot|shot
+show|shown/showed
+shrink|shrunk/shrunken
+shut|shut
+sing|sung
+sink|sunk
+sit|sat
+sleep|slept
+slide|slid
+slit|slit
+speak|spoken
+speed|sped
+spend|spent
+spin|spun
+spit|spit/spat
+split|split
+spread|spread
+spring|sprung
+stand|stood
+steal|stolen
+stick|stuck
+string|strung
+stink|stunk
+strike|struck/stricken
+strive|striven
+swear|sworn
+sweep|swept
+swell|swelled/swollen
+swim|swum
+swing|swung
+take|taken
+teach|taught
+tear|torn
+tell|told
+think|thought
+throw|thrown
+understand|understood
+uphold|upheld
+upset|upset
+wake|woken
+wear|worn
+weave|woven
+wed|wedded/wed
+weep|wept
+win|won
+wind|wound
+withdraw|withdrawn
+withhold|withheld
+withstand|withstood
+wring|wrung
+write|written`;
+const ALL=RAW.split("\n").map((l,i)=>{const[a,b]=l.split("|");return{id:i,a,b}});
+const SENT={};`be|I have _ here before.
+bear|She was _ in May.
+beat|They have _ the record.
+become|He has _ a doctor.
+begin|The show has _ .
+bend|I have _ the wire.
+bet|She has _ on the team.
+bid|He has _ for the lamp.
+bind|They have _ the book.
+bite|The dog has _ me.
+bleed|His knee has _ .
+blow|The wind has _ hard.
+break|I have _ my phone.
+breed|She has _ rabbits.
+bring|He has _ his lunch.
+broadcast|They have _ the game.
+build|We have _ a house.
+burst|The balloon has _ .
+buy|I have _ a new bike.
+cast|I have _ my vote.
+catch|She has _ a cold.
+choose|We have _ a name.
+cling|The baby has _ to me.
+come|He has _ home.
+cost|It has _ too much.
+creep|The cat has _ closer.
+cut|I have _ the cake.
+deal|She has _ with it.
+dig|He has _ a hole.
+dive|She has _ before.
+do|I have _ my homework.
+draw|He has _ a map.
+drink|I have _ my juice.
+drive|She has _ all night.
+eat|We have _ lunch.
+fall|The leaves have _ .
+feed|I have _ the dog.
+feel|He has _ better.
+fight|They have _ again.
+find|I have _ my keys.
+fit|The shoes have _ well.
+flee|The birds have _ .
+fly|She has _ to Rome.
+forbid|Phones are _ here.
+forget|I have _ her name.
+forgive|He has _ me.
+freeze|The lake has _ .
+get|She has _ a letter.
+give|I have _ him a gift.
+go|They have _ home.
+grind|He has _ the coffee.
+grow|The tree has _ tall.
+hang|I have _ the photo.
+have|She has _ lunch.
+hear|I have _ that song.
+hide|He has _ the gift.
+hit|The ball has _ the wall.
+hold|She has _ my hand.
+hurt|I have _ my foot.
+keep|He has _ his promise.
+know|I have _ her for years.
+lay|She has _ the table.
+lead|He has _ the team.
+leave|They have _ already.
+lend|I have _ him a pen.
+let|She has _ me in.
+lie|He has _ in bed all day.
+light|I have _ the candle.
+lose|We have _ the game.
+make|She has _ a cake.
+mean|I have never _ it.
+meet|We have _ before.
+mistake|He was _ for his twin.
+overcome|She has _ her fear.
+overdo|I have _ it today.
+overtake|A car has _ us.
+overthrow|They have _ the king.
+pay|He has _ the bill.
+plead|She has _ for help.
+prove|He has _ me wrong.
+put|I have _ it away.
+quit|She has _ her job.
+read|I have _ that book.
+ride|He has _ a horse.
+ring|The bell has _ twice.
+rise|The sun has _ .
+run|I have _ a mile.
+say|She has _ sorry.
+see|I have _ that film.
+seek|They have _ advice.
+sell|He has _ his car.
+send|I have _ the email.
+set|She has _ the table.
+sew|Mom has _ a button on.
+shake|He has _ my hand.
+shed|The tree has _ leaves.
+shine|The sun has _ all day.
+shoot|He has _ a goal.
+show|She has _ me the way.
+shrink|My shirt has _ .
+shut|I have _ the door.
+sing|He has _ that song.
+sink|The boat has _ .
+sit|I have _ here for an hour.
+sleep|She has _ well.
+slide|The box has _ away.
+slit|He has _ the bag open.
+speak|I have _ to her.
+speed|The car has _ by.
+spend|He has _ all his money.
+spin|The wheel has _ .
+spit|He has _ it out.
+split|We have _ the bill.
+spread|The news has _ .
+spring|The trap has _ shut.
+stand|I have _ in line.
+steal|Someone has _ my bag.
+stick|The gum has _ to my shoe.
+string|She has _ the beads.
+stink|The trash has _ all day.
+strike|The clock has _ noon.
+strive|He has _ for success.
+swear|She has _ to tell the truth.
+sweep|I have _ the floor.
+swell|My ankle has _ .
+swim|We have _ in the sea.
+swing|The door has _ open.
+take|I have _ the bus.
+teach|She has _ math.
+tear|I have _ my sleeve.
+tell|He has _ a joke.
+think|I have _ about it.
+throw|She has _ the ball.
+understand|I have _ the rule.
+uphold|The court has _ the law.
+upset|The news has _ her.
+wake|I have _ up early.
+wear|He has _ that coat.
+weave|She has _ a basket.
+wed|They have _ in June.
+weep|She has _ all night.
+win|We have _ the cup.
+wind|I have _ the clock.
+withdraw|He has _ some cash.
+withhold|They have _ the money.
+withstand|The bridge has _ storms.
+wring|She has _ out the towel.
+write|I have _ a letter.`.split("\n").forEach(l=>{const i=l.indexOf("|");SENT[l.slice(0,i)]=l.slice(i+1)});
+const scene=w=>`<span class="word">${w}</span>`;
+const face=(l,w,a,s,t)=>`<span class="lab">${l}</span>${scene(w,a,s)}<span class="sen">${t}</span>`;
+const P={wind:"wynd",wound:"wownd"};
+function say(w,part){
+  if(!("speechSynthesis" in window))return;
+  let t=w==="read"?(part?"red":"reed"):(P[w]||w.replace("/"," or "));
+  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-US";u.rate=.85;speechSynthesis.speak(u);
+}
+let known=new Set(),order=ALL.map(x=>x.id),pos=0,shuffled=false,only=false,reversed=false;
+try{const s=JSON.parse(localStorage.getItem("verbs-known")||"[]");known=new Set(s)}catch(e){}
+const $=id=>document.getElementById(id);
+const card=$("card");
+function save(){try{localStorage.setItem("verbs-known",JSON.stringify([...known]))}catch(e){}}
+function build(keepId){
+  let ids=ALL.map(x=>x.id);
+  if(shuffled){for(let i=ids.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]]}}
+  if(only)ids=ids.filter(i=>!known.has(i));
+  order=ids;
+  pos=keepId!=null&&order.includes(keepId)?order.indexOf(keepId):0;
+}
+function render(){
+  $("bar").style.width=(known.size/ALL.length*100)+"%";
+  const empty=order.length===0;
+  $("stage").hidden=empty;$("rate").hidden=empty;
+  if(empty){
+    let d=$("done");
+    if(!d){d=document.createElement("div");d.id="done";d.className="done";$("stage").after(d)}
+    d.textContent="You have marked every verb as known. Reset progress to start again.";
+    $("count").textContent=known.size+" of "+ALL.length+" known";return;
+  }
+  const d=$("done");if(d)d.remove();
+  const v=ALL[order[pos]];
+  card.classList.remove("flip");
+  const act="",t=SENT[v.a]||"",fill="<b>"+v.b.split("/")[0]+"</b>",sen=x=>t.replace("_",x);
+  $("ff").innerHTML=face(reversed?"Past participle":"Simple present",reversed?v.b:v.a,act,"f",sen(reversed?fill:"<b>_____</b>"));
+  $("fb").innerHTML=face(reversed?"Simple present":"Past participle",reversed?v.a:v.b,act,"b",sen(fill));
+  card.setAttribute("aria-label","Flip card: "+(reversed?v.b:v.a));
+  $("count").textContent="Card "+(pos+1)+" of "+order.length+" · "+known.size+" known";
+}
+function go(d){if(!order.length)return;pos=(pos+d+order.length)%order.length;render()}
+function rate(ok){
+  if(!order.length)return;
+  const id=order[pos];
+  if(ok)known.add(id);else known.delete(id);
+  save();
+  if(only&&ok){order.splice(pos,1);if(pos>=order.length)pos=0;render()}else go(1);
+}
+card.onclick=()=>card.classList.toggle("flip");
+$("next").onclick=()=>go(1);$("prev").onclick=()=>go(-1);
+$("got").onclick=()=>rate(true);$("miss").onclick=()=>rate(false);
+$("shuf").onclick=e=>{shuffled=!shuffled;e.target.setAttribute("aria-pressed",shuffled);build();render()};
+$("only").onclick=e=>{only=!only;e.target.setAttribute("aria-pressed",only);build();render()};
+$("rev").onclick=e=>{reversed=!reversed;e.target.setAttribute("aria-pressed",reversed);render()};
+$("reset").onclick=()=>{known.clear();save();build();render()};
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowRight")go(1);else if(e.key==="ArrowLeft")go(-1);
+  else if(e.key===" "&&document.activeElement!==card&&e.target.tagName!=="BUTTON"){e.preventDefault();card.classList.toggle("flip")}
+});
+$("hear").onclick=()=>{
+  if(!order.length)return;
+  const v=ALL[order[pos]],part=reversed?!card.classList.contains("flip"):card.classList.contains("flip");
+  say(part?v.b:v.a,part);
+};
+if(!("speechSynthesis" in window))$("hear").hidden=true;
+build();render();
+</script>
+</body>
+</html>
