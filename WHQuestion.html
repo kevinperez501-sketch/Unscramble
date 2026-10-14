@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WH Question Flashcards: English / Español</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  box-sizing:border-box;
+  --bg:#f3f6fb; --ink:#1d2433; --muted:#5b6578; --surface:#ffffff; --line:#d9e0ec;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#121722;--ink:#eef2fa;--muted:#9aa5ba;--surface:#1c2433;--line:#2c374b}
+}
+:root[data-theme="dark"]{--bg:#121722;--ink:#eef2fa;--muted:#9aa5ba;--surface:#1c2433;--line:#2c374b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fredoka",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+header{width:100%;max-width:640px;padding:20px 20px 4px;text-align:center}
+h1{font-size:1.5rem;font-weight:600;margin:0 0 4px}
+header p{margin:0;color:var(--muted);font-size:.95rem}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:12px 20px}
+button{font:inherit;cursor:pointer;border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 16px;font-weight:500}
+button:hover{border-color:var(--ink)}
+button:focus-visible,.card:focus-visible{outline:3px solid #f2a900;outline-offset:3px}
+button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.count{color:var(--muted);font-weight:500;margin:4px 0 12px}
+.scene{width:min(92vw,560px);height:min(60vh,380px);min-height:300px;perspective:1200px}
+.card{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.3,.7,.2,1);cursor:pointer;border-radius:28px}
+.card.flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:10px}
+.front{background:var(--accent);color:#fff}
+.back{background:var(--surface);color:var(--ink);border:4px solid var(--accent);transform:rotateY(180deg)}
+.lang{position:absolute;top:16px;left:20px;font-size:.9rem;font-weight:600;opacity:.85}
+.back .lang{color:var(--accent)}
+.word{font-size:clamp(2.2rem,9vw,3.6rem);font-weight:700;line-height:1.1;margin:0}
+.example{font-size:clamp(1.05rem,3.6vw,1.35rem);margin:0;max-width:30ch;line-height:1.35}
+.front .example{opacity:.95}
+.back .word{color:var(--accent)}
+.back .example{color:var(--ink)}
+.tr{font-size:.95rem;color:var(--muted);margin:0}
+.speak{position:absolute;bottom:14px;right:14px;padding:6px 14px;font-size:.9rem}
+.front .speak{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.6);color:#fff}
+.hint{position:absolute;bottom:18px;left:20px;font-size:.85rem;opacity:.8}
+.nav{display:flex;gap:12px;margin:22px 0 8px;align-items:center}
+.nav button{min-width:120px;font-size:1.05rem;font-weight:600;padding:10px 20px}
+.dots{display:flex;gap:8px;margin:8px 0 28px;flex-wrap:wrap;justify-content:center;max-width:90vw}
+.dot{width:14px;height:14px;padding:0;border-radius:50%;border:2px solid var(--line);background:var(--surface)}
+.dot.on{background:var(--ink);border-color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>WH Questions / Preguntas con WH</h1>
+  <p>Tap the card to flip it. Toca la tarjeta para voltearla.</p>
+</header>
+
+<div class="toolbar">
+  <button id="shuffle">Shuffle / Mezclar</button>
+  <button id="swap" aria-pressed="false">Spanish first / Español primero</button>
+</div>
+<div class="count" id="count" aria-live="polite"></div>
+
+<div class="scene">
+  <div class="card" id="card" tabindex="0" role="button" aria-label="Flashcard. Press Enter or Space to flip.">
+    <div class="face front" id="front"></div>
+    <div class="face back" id="back"></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button id="prev">&larr; Back</button>
+  <button id="next">Next &rarr;</button>
+</div>
+<div class="dots" id="dots"></div>
+
+<script>
+var DATA = [
+  {en:"What", es:"Qué",
+   enEx:"What is this?", esEx:"¿Qué es esto?", color:"#c2410c"},
+  {en:"Where", es:"Dónde",
+   enEx:"Where do you live?", esEx:"¿Dónde vives?", color:"#1d4ed8"},
+  {en:"When", es:"Cuándo",
+   enEx:"When is your birthday?", esEx:"¿Cuándo es tu cumpleaños?", color:"#047857"},
+  {en:"Why", es:"Por qué",
+   enEx:"Why are you sad?", esEx:"¿Por qué estás triste?", color:"#a21caf"},
+  {en:"What time", es:"Qué hora / A qué hora",
+   enEx:"What time is it?", esEx:"¿Qué hora es?", color:"#b91c1c"},
+  {en:"What kind of", es:"Qué tipo de",
+   enEx:"What kind of music do you like?", esEx:"¿Qué tipo de música te gusta?", color:"#0e7490"},
+  {en:"Which", es:"Cuál",
+   enEx:"Which one do you want?", esEx:"¿Cuál quieres?", color:"#4d7c0f"},
+  {en:"Who", es:"Quién",
+   enEx:"Who is that?", esEx:"¿Quién es ese?", color:"#7e22ce"},
+  {en:"How often", es:"Con qué frecuencia",
+   enEx:"How often do you exercise?", esEx:"¿Con qué frecuencia haces ejercicio?", color:"#be185d"},
+  {en:"How much", es:"Cuánto / Cuánta",
+   enEx:"How much does this cost?", esEx:"¿Cuánto cuesta esto?", color:"#0f766e"},
+  {en:"How many", es:"Cuántos / Cuántas",
+   enEx:"How many brothers do you have?", esEx:"¿Cuántos hermanos tienes?", color:"#854d0e"},
+  {en:"How many times", es:"Cuántas veces",
+   enEx:"How many times did you call?", esEx:"¿Cuántas veces llamaste?", color:"#3730a3"},
+  {en:"How long", es:"Cuánto tiempo",
+   enEx:"How long does it take?", esEx:"¿Cuánto tiempo toma?", color:"#166534"}
+];
+var order = DATA.map(function(_,i){return i;});
+var pos = 0, spanishFirst = false;
+var card = document.getElementById("card");
+var front = document.getElementById("front");
+var back = document.getElementById("back");
+
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+
+function faceHTML(lang, langLabel, word, ex, tr, speakLang, hint){
+  return '<span class="lang">'+langLabel+'</span>'+
+    '<p class="word">'+esc(word)+'</p>'+
+    '<p class="example">'+esc(ex)+'</p>'+
+    (tr?'<p class="tr">'+esc(tr)+'</p>':'')+
+    '<button class="speak" data-text="'+esc(word+". "+ex).replace(/"/g,"&quot;")+'" data-lang="'+speakLang+'" aria-label="Listen">&#128266; Listen</button>'+
+    (hint?'<span class="hint">'+hint+'</span>':'');
+}
+
+function render(){
+  var d = DATA[order[pos]];
+  card.style.setProperty("--accent", d.color);
+  var enFace = faceHTML("en","English",d.en,d.enEx,"","en-US","Tap to flip");
+  var esFace = faceHTML("es","Español",d.es,d.esEx,"","es-MX","Toca para voltear");
+  front.innerHTML = spanishFirst ? esFace : enFace;
+  back.innerHTML = spanishFirst ? enFace.replace("Tap to flip","") : esFace.replace("Toca para voltear","");
+  document.getElementById("count").textContent = (pos+1)+" / "+DATA.length;
+  var dots = document.getElementById("dots");
+  dots.innerHTML = "";
+  order.forEach(function(idx,i){
+    var b = document.createElement("button");
+    b.className = "dot"+(i===pos?" on":"");
+    b.setAttribute("aria-label","Go to card "+(i+1)+": "+DATA[idx].en);
+    b.onclick = function(){go(i);};
+    dots.appendChild(b);
+  });
+}
+
+function go(i){
+  card.classList.remove("flipped");
+  pos = (i+DATA.length)%DATA.length;
+  setTimeout(render, 120);
+  render();
+}
+
+card.addEventListener("click", function(e){
+  var sp = e.target.closest(".speak");
+  if(sp){
+    e.stopPropagation();
+    try{
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(sp.getAttribute("data-text"));
+      u.lang = sp.getAttribute("data-lang");
+      u.rate = 0.85;
+      speechSynthesis.speak(u);
+    }catch(err){}
+    return;
+  }
+  card.classList.toggle("flipped");
+});
+card.addEventListener("keydown", function(e){
+  if(e.key==="Enter"||e.key===" "){e.preventDefault();card.classList.toggle("flipped");}
+});
+document.addEventListener("keydown", function(e){
+  if(e.key==="ArrowRight") go(pos+1);
+  if(e.key==="ArrowLeft") go(pos-1);
+});
+document.getElementById("next").onclick = function(){go(pos+1);};
+document.getElementById("prev").onclick = function(){go(pos-1);};
+document.getElementById("shuffle").onclick = function(){
+  for(var i=order.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=order[i];order[i]=order[j];order[j]=t;
+  }
+  go(0);
+};
+var swapBtn = document.getElementById("swap");
+swapBtn.onclick = function(){
+  spanishFirst = !spanishFirst;
+  swapBtn.setAttribute("aria-pressed", String(spanishFirst));
+  card.classList.remove("flipped");
+  render();
+};
+render();
+</script>
+</body>
+</html>
